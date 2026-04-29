@@ -7,7 +7,6 @@ import schemas
 import crud
 from database import engine, get_db
 
-# Создаем таблицы в БД
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -16,7 +15,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# === Эндпоинты для ингредиентов ===
 @app.get("/ingredients", response_model=List[schemas.Ingredient])
 def read_ingredients(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     ingredients = db.query(models.Ingredient).offset(skip).limit(limit).all()
@@ -29,7 +27,6 @@ def create_ingredient(ingredient: schemas.IngredientCreate, db: Session = Depend
         raise HTTPException(status_code=400, detail="Ingredient already exists")
     return crud.create_ingredient(db, ingredient)
 
-# === Эндпоинты для рецептов ===
 @app.get("/recipes", response_model=List[schemas.Recipe])
 def read_recipes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     recipes = db.query(models.Recipe).offset(skip).limit(limit).all()
@@ -46,7 +43,6 @@ def read_recipe(recipe_id: int, db: Session = Depends(get_db)):
 def create_recipe(recipe: schemas.RecipeCreate, db: Session = Depends(get_db)):
     return crud.create_recipe(db, recipe)
 
-# === ГЛАВНЫЙ ЭНДПОИНТ: поиск по ингредиентам ===
 @app.post("/recipes/search/by-ingredients", response_model=schemas.SearchResponse)
 def search_by_ingredients(
     request: schemas.SearchRequest,
@@ -74,7 +70,6 @@ def search_by_ingredients(
         total_found=len(results)
     )
 
-# === Простой поиск через GET (для удобства тестирования) ===
 @app.get("/recipes/search/quick", response_model=schemas.SearchResponse)
 def quick_search(
     ingredients: str = Query(..., description="Ингредиенты через запятую, например: курица,рис,лук"),
@@ -91,7 +86,6 @@ def quick_search(
     )
     return schemas.SearchResponse(results=results, total_found=len(results))
 
-# Корневой эндпоинт
 @app.get("/")
 def root():
     return {
