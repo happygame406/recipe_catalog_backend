@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
-# === Схемы для ингредиентов ===
 class IngredientBase(BaseModel):
     name: str
 
@@ -14,13 +13,11 @@ class Ingredient(IngredientBase):
     class Config:
         from_attributes = True
 
-# === Схемы для связи рецепт-ингредиент (с весом и обязательностью) ===
 class RecipeIngredientBase(BaseModel):
     ingredient_id: int
     weight: float = 1.0
     is_mandatory: bool = False
 
-# === Схемы для рецептов ===
 class RecipeBase(BaseModel):
     title: str
     description: Optional[str] = None
@@ -38,7 +35,6 @@ class Recipe(RecipeBase):
     class Config:
         from_attributes = True
 
-# === Схемы для поиска по ингредиентам ===
 class SearchRequest(BaseModel):
     user_ingredients: List[str]
     min_match_percent: float = 0.0
