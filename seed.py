@@ -11,12 +11,10 @@ import crud
 from models import Base
 
 def init_db():
-    # Удаляем старые таблицы и создаем новые
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     
-    # Создаем тестовые рецепты
     recipes_data = [
         {
             "title": "Курица с рисом по-домашнему",
@@ -77,8 +75,7 @@ def init_db():
             instructions=recipe.get("instructions", "")
         )
         print(f"✅ Добавлен рецепт: {recipe['title']}")
-    
-    # Выводим список ингредиентов для проверки
+
     ingredients = db.query(models.Ingredient).all()
     print(f"\n📝 Загружено ингредиентов: {len(ingredients)}")
     for ing in ingredients:
@@ -88,6 +85,5 @@ def init_db():
     print("\n🎉 Тестовые данные загружены!")
 
 if __name__ == "__main__":
-    # Добавляем импорт models здесь, чтобы избежать циклических импортов
     import models
     init_db()
