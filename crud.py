@@ -4,7 +4,6 @@ from typing import List, Dict, Tuple
 import models
 import schemas
 
-# === CRUD для ингредиентов ===
 def get_ingredient_by_name(db: Session, name: str):
     return db.query(models.Ingredient).filter(models.Ingredient.name == name).first()
 
@@ -21,12 +20,10 @@ def get_or_create_ingredient(db: Session, name: str):
         ingredient = create_ingredient(db, schemas.IngredientCreate(name=name))
     return ingredient
 
-# === CRUD для рецептов ===
 def get_recipe(db: Session, recipe_id: int):
     return db.query(models.Recipe).filter(models.Recipe.id == recipe_id).first()
 
 def create_recipe(db: Session, recipe: schemas.RecipeCreate):
-    # Создаем рецепт
     db_recipe = models.Recipe(
         title=recipe.title,
         description=recipe.description,
@@ -35,20 +32,17 @@ def create_recipe(db: Session, recipe: schemas.RecipeCreate):
         category=recipe.category
     )
     db.add(db_recipe)
-    db.flush()  # чтобы получить id рецепта без коммита
+    db.flush() 
     
-    # Добавляем ингредиенты через ассоциативную таблицу
     for ri in recipe.ingredients:
-        # Получаем ингредиент по ID
         ingredient = db.query(models.Ingredient).filter(models.Ingredient.id == ri.ingredient_id).first()
         if ingredient:
-            # Добавляем связь через ассоциативную таблицу
             db.execute(
                 models.recipe_ingredient.insert().values(
                     recipe_id=db_recipe.id,
                     ingredient_id=ingredient.id,
                     weight=ri.weight,
-                    is_mandatory=1 if ri.is_mandatory else 0  # конвертируем bool в int
+                    is_mandatory=1 if ri.is_mandatory else 0 
                 )
             )
     
@@ -56,7 +50,6 @@ def create_recipe(db: Session, recipe: schemas.RecipeCreate):
     db.refresh(db_recipe)
     return db_recipe
 
-# === АЛГОРИТМ ПОДБОРА РЕЦЕПТОВ ПО ИНГРЕДИЕНТАМ ===
 def search_recipes_by_ingredients(
     db: Session, 
     user_ingredients: List[str],
@@ -69,18 +62,15 @@ def search_recipes_by_ingredients(
     2. Если в рецепте есть обязательный ингредиент (is_mandatory=1) и его НЕТ у пользователя → рецепт отбрасывается.
     3. Возвращаем отсортированный список.
     """
-    # Получаем все рецепты с их ингредиентами
     recipes = db.query(models.Recipe).all()
     
     user_ingredients_lower = [i.lower().strip() for i in user_ingredients]
     results = []
     
     for recipe in recipes:
-        # Получаем ингредиенты рецепта с их свойствами через ассоциативную таблицу
         recipe_ingredients_data = []
         mandatory_ingredients = []
         
-        # Запрос к ассоциативной таблице
         stmt = db.query(
             models.recipe_ingredient.c.ingredient_id,
             models.recipe_ingredient.c.is_mandatory,
@@ -98,7 +88,6 @@ def search_recipes_by_ingredients(
             if is_mandatory == 1:
                 mandatory_ingredients.append(ing_name_lower)
         
-        # Проверка обязательных ингредиентов
         all_mandatory_present = True
         for mand in mandatory_ingredients:
             if mand not in user_ingredients_lower:
@@ -106,9 +95,8 @@ def search_recipes_by_ingredients(
                 break
         
         if not all_mandatory_present:
-            continue  # пропускаем рецепт
+            continue 
         
-        # Вычисляем совпадение
         matched = 0
         for ing in recipe_ingredients_data:
             if ing in user_ingredients_lower:
@@ -120,9 +108,7 @@ def search_recipes_by_ingredients(
         else:
             match_percent = (matched / total) * 100
         
-        # Фильтр по минимальному проценту
         if match_percent >= min_match_percent:
-            # Определяем недостающие ингредиенты
             missing = [ing for ing in recipe_ingredients_data if ing not in user_ingredients_lower]
             
             results.append(schemas.SearchResultItem(
@@ -133,13 +119,10 @@ def search_recipes_by_ingredients(
                 cooking_time_minutes=recipe.cooking_time_minutes
             ))
     
-    # Сортируем по убыванию процента совпадения
     results.sort(key=lambda x: x.match_percent, reverse=True)
     
-    # Ограничиваем количество
     return results[:limit]
 
-# Простая версия создания рецепта (для seed.py)
 def create_recipe_simple(db: Session, title: str, ingredient_names: List[str], **kwargs):
     db_recipe = models.Recipe(
         title=title,
@@ -155,7 +138,6 @@ def create_recipe_simple(db: Session, title: str, ingredient_names: List[str], *
     
     for ing_name in ingredient_names:
         ingredient = get_or_create_ingredient(db, ing_name)
-        # Добавляем в ассоциативную таблицу
         db.execute(
             models.recipe_ingredient.insert().values(
                 recipe_id=db_recipe.id,
