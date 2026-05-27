@@ -93,9 +93,8 @@ uvicorn main:app --reload
 
 **Быстрый поиск (GET):**
 
-```http
 ## GET/recipes/search/quick?ingredients=курица,рис,морковь&min_match=30&limit=8
-```
+
 
 ---
 
