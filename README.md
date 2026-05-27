@@ -43,7 +43,7 @@ cd recipe_catalog_backend
 ```bash
 python -m venv venv
 venv\Scripts\activate          # Windows
-# source venv/bin/activate     # Linux / macOS
+source venv/bin/activate     # Linux / macOS
 ```
 
 ### 3. Установка зависимостей
