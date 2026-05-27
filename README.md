@@ -164,4 +164,3 @@ recipe_catalog_backend/
 ├── requirements.txt
 └── recipes.db              # База данных
 ```
----
